@@ -17,7 +17,7 @@ const cardVariants = {
   visible: { 
     y: 0, 
     opacity: 1, 
-    transition: { type: 'spring', stiffness: 100, damping: 15 } as const // ✅ CORREGIDO AQUÍ
+    transition: { type: 'spring', stiffness: 100, damping: 15 } as const 
   },
 };
 
@@ -26,6 +26,26 @@ export default function Home() {
   const { data: session } = useSession();
   const [dbEvents, setDbEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ✅ AUTO-CONFIGURACIÓN DE GOOGLE Y MINIATURA
+  useEffect(() => {
+    // Verificación de Google
+    const googleVerify = document.createElement('meta');
+    googleVerify.name = "google-site-verification";
+    googleVerify.content = "BsraKmB15E0DrWuxDH1v82d36CavO0Ej6ndELOpIegI";
+    document.head.appendChild(googleVerify);
+
+    // Foto para Google y Redes (Usa el logo que ya tienes en public)
+    const ogImage = document.createElement('meta');
+    ogImage.setAttribute('property', 'og:image');
+    ogImage.content = `${window.location.origin}/logo-gxfre.png`; 
+    document.head.appendChild(ogImage);
+
+    const twitterImage = document.createElement('meta');
+    twitterImage.name = "twitter:image";
+    twitterImage.content = `${window.location.origin}/logo-gxfre.png`;
+    document.head.appendChild(twitterImage);
+  }, []);
 
   // ✅ FECHA DINÁMICA: Detecta el día actual automáticamente
   const todayStr = useMemo(() => {
@@ -65,7 +85,7 @@ export default function Home() {
 
   const { monthName, year, daysArray, startOffset } = useMemo(() => {
     const y = viewDate.getFullYear();
-    const m = viewDate.getMonth();
+    const m = useDate.getMonth();
     const firstDayIndex = new Date(y, m, 1).getDay();
     return {
       monthName: viewDate.toLocaleString('es-ES', { month: 'long' }),
@@ -328,4 +348,4 @@ export default function Home() {
       </div>
     </main>
   );
-} 
+}
