@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// ✅ CAMBIO AQUÍ: Importamos desde /options
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SECRET_KEY!;
@@ -72,7 +73,6 @@ export async function POST(request: Request) {
     }
 
     // B. Si el registro fue exitoso, sumamos el voto en la tabla principal
-    // Buscamos el valor actual para sumar +1
     const { data: current } = await supabase
       .from('votaciones')
       .select('votos')

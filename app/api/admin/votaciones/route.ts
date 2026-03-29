@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// ✅ CAMBIO AQUÍ: Ahora importamos desde /options
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,19 +27,16 @@ export async function POST(request: Request) {
     }
 
     // 2. RESET TOTAL: Borramos votos antiguos y opciones antiguas
-    // Esto permite que la nueva encuesta empiece limpia
     await supabase.from('registro_votos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('votaciones').delete().neq('label', 'SISTEMA_RESERVA');
 
     // 3. Insertar las nuevas opciones
     if (opciones && Array.isArray(opciones)) {
-      // Limpiamos opciones vacías y las preparamos
       const nuevasOpciones = opciones
         .filter((opt: string) => opt && opt.trim() !== "")
         .map((opt: string) => ({
           label: opt,
           votos: 0
-          // ❌ No mandamos ID, dejamos que Supabase use el DEFAULT que pusimos antes
         }));
 
       if (nuevasOpciones.length > 0) {

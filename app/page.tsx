@@ -14,7 +14,11 @@ const containerVariants = {
 
 const cardVariants = {
   hidden: { y: 30, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } },
+  visible: { 
+    y: 0, 
+    opacity: 1, 
+    transition: { type: 'spring', stiffness: 100, damping: 15 } as const // ✅ CORREGIDO AQUÍ
+  },
 };
 
 export default function Home() {
@@ -157,7 +161,6 @@ export default function Home() {
             </div>
 
             <div className="text-center sm:text-left">
-              {/* ✅ GXFRE SE PONE ROJO SI ESTÁ EN DIRECTO (hover o click en día de hoy) */}
               <h1 
                 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-[0.8] transition-all duration-500"
                 style={{ 
@@ -193,7 +196,6 @@ export default function Home() {
                 <a href="https://tiktok.com/@gxfre" target="_blank" className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl hover:bg-white hover:text-black transition-all group/social">
                   <svg className="w-5 h-5 fill-white group-hover/social:fill-black" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.06-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.03 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-1.22-.32-2.57-.17-3.64.49-.99.61-1.62 1.69-1.72 2.83-.15 1.18.23 2.42 1.05 3.3.69.75 1.63 1.27 2.64 1.38.8.09 1.61-.07 2.3-.49.95-.57 1.58-1.54 1.74-2.62.03-3.69.01-7.38.02-11.07Z"/></svg>
                 </a>
-                {/* ✅ INSTAGRAM GXFREEE_ON */}
                 <a href="https://www.instagram.com/gxfreee_on/" target="_blank" className="w-10 h-10 flex items-center justify-center bg-[#E1306C]/10 border border-[#E1306C]/20 rounded-xl hover:bg-[#E1306C] transition-all group/social">
                   <svg className="w-5 h-5 fill-[#E1306C] group-hover/social:fill-white" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.332 3.608 1.308.975.975 1.245 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.332 2.633-1.308 3.608-.975.975-2.242 1.245-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.332-3.608-1.308-.975-.975-1.245-2.242-1.308-3.608-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.062-1.366.332-2.633 1.308-3.608.975-.975 2.242-1.245 3.608-1.308 1.266-.058-1.646.07 4.85-.07M12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.2 4.353 2.612 6.765 6.963 6.965 1.28.058 1.688.072 4.947.072s3.667-.014 4.947-.072c4.351-.2 6.763-2.612 6.963-6.963.058-1.28.072-1.688.072-4.947s-.014-3.667-.072-4.947c-.2-4.353-2.612-6.765-6.963-6.963C15.667.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
                 </a>

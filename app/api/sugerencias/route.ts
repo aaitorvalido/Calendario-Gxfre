@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// ✅ CAMBIO AQUÍ: Importamos desde /options
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
