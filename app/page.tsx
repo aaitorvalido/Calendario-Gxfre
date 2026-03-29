@@ -27,15 +27,15 @@ export default function Home() {
   const [dbEvents, setDbEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ AUTO-CONFIGURACIÓN DE GOOGLE Y MINIATURA
+  // ✅ CONFIGURACIÓN AUTOMÁTICA DE GOOGLE Y MINIATURA (Corregido)
   useEffect(() => {
-    // Verificación de Google
+    // Verificación de Google Search Console
     const googleVerify = document.createElement('meta');
     googleVerify.name = "google-site-verification";
     googleVerify.content = "BsraKmB15E0DrWuxDH1v82d36CavO0Ej6ndELOpIegI";
     document.head.appendChild(googleVerify);
 
-    // Foto para Google y Redes (Usa el logo que ya tienes en public)
+    // Foto para Google y Redes (Usa el logo de la carpeta public)
     const ogImage = document.createElement('meta');
     ogImage.setAttribute('property', 'og:image');
     ogImage.content = `${window.location.origin}/logo-gxfre.png`; 
@@ -83,9 +83,10 @@ export default function Home() {
   const [hoveredDay, setHoveredDay] = useState<number | null>(null); 
   const [searchTerm, setSearchTerm] = useState('');
 
+  // 🛠️ CORRECCIÓN DE LA LÍNEA 88 (viewDate en lugar de useDate)
   const { monthName, year, daysArray, startOffset } = useMemo(() => {
     const y = viewDate.getFullYear();
-    const m = useDate.getMonth();
+    const m = viewDate.getMonth(); // ✅ CORREGIDO
     const firstDayIndex = new Date(y, m, 1).getDay();
     return {
       monthName: viewDate.toLocaleString('es-ES', { month: 'long' }),
