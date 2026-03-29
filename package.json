@@ -3,18 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@splinetool/react-spline": "^4.1.0",
+    "@splinetool/runtime": "^1.12.73",
+    "@supabase/supabase-js": "^2.100.1",
+    "bcrypt": "^6.0.0",
+    "cropperjs": "^2.1.0",
+    "framer-motion": "^12.38.0",
     "next": "16.2.1",
+    "next-auth": "^4.24.13",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-cropper": "^2.3.3",
+    "react-dom": "19.2.4",
+    "resend": "^6.9.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
