@@ -27,7 +27,7 @@ export default function Home() {
   const [dbEvents, setDbEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ FECHA DINÁMICA: Detecta el día actual automáticamente
+  // ✅ FECHA DINÁMICA: Formato YYYY-MM-DD para comparaciones precisas
   const todayStr = useMemo(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -75,9 +75,13 @@ export default function Home() {
     };
   }, [viewDate]);
 
+  // ✅ FILTRO MEJORADO: Eventos de hoy y futuros
   const futureEvents = useMemo(() => {
     return dbEvents
-      .filter(e => e.fecha >= todayStr)
+      .filter(e => {
+        const eventDate = e.fecha?.split('T')[0];
+        return eventDate >= todayStr;
+      })
       .sort((a, b) => a.fecha.localeCompare(b.fecha))
       .slice(0, 3);
   }, [dbEvents, todayStr]);
@@ -87,7 +91,7 @@ export default function Home() {
     const yearMonth = `${year}-${monthStr}`;
     let events = dbEvents.filter(e => e.fecha && e.fecha.startsWith(yearMonth));
     if (selectedDay) {
-      events = events.filter(e => e.fecha === `${yearMonth}-${String(selectedDay).padStart(2, '0')}`);
+      events = events.filter(e => e.fecha.startsWith(`${yearMonth}-${String(selectedDay).padStart(2, '0')}`));
     }
     if (searchTerm.trim()) {
       const low = searchTerm.toLowerCase();
@@ -101,10 +105,10 @@ export default function Home() {
     if (dayToTrack) {
       const dateStr = `${year}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(dayToTrack).padStart(2, '0')}`;
       if (dateStr === todayStr) return '#EF4444';
-      const hasEvent = dbEvents.some(e => e.fecha === dateStr);
+      const hasEvent = dbEvents.some(e => e.fecha?.startsWith(dateStr));
       return hasEvent ? '#7A56B1' : '#1a162e';
     }
-    return dbEvents.some(e => e.fecha === todayStr) ? '#EF4444' : '#7A56B1';
+    return dbEvents.some(e => e.fecha?.startsWith(todayStr)) ? '#EF4444' : '#7A56B1';
   }, [selectedDay, hoveredDay, dbEvents, todayStr, year, viewDate]);
 
   return (
@@ -180,7 +184,7 @@ export default function Home() {
                 {Array.from({ length: startOffset }).map((_, i) => <div key={i}></div>)}
                 {daysArray.map(day => {
                   const dateStr = `${year}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                  const hasEvent = dbEvents.some(e => e.fecha === dateStr);
+                  const hasEvent = dbEvents.some(e => e.fecha?.startsWith(dateStr));
                   const isToday = dateStr === todayStr;
                   return (
                     <div key={day} 
@@ -197,13 +201,35 @@ export default function Home() {
                 })}
               </div>
             </div>
+
+            {/* ✅ BLOQUE REINSTALADO: Agenda Próxima */}
+            <div className="bg-white/[0.02] rounded-[2rem] p-6 border border-white/5">
+              <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4 px-2">Agenda Próxima</h3>
+              <div className="flex flex-col gap-3">
+                {futureEvents.map(event => (
+                  <div key={event.id} className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer" onClick={() => {
+                    const [y, m, d] = event.fecha.split('T')[0].split('-').map(Number);
+                    setViewDate(new Date(y, m - 1, 1));
+                    setSelectedDay(d);
+                  }}>
+                    <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center text-[10px] font-black italic border border-white/10" style={{ color: event.fecha?.startsWith(todayStr) ? '#EF4444' : '#7A56B1' }}>
+                      {event.fecha?.split('T')[0].split('-')[2]}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[11px] font-black uppercase italic truncate">{event.titulo}</span>
+                      <span className="text-[9px] text-gray-500 font-bold uppercase">{new Date(event.fecha).toLocaleDateString('es-ES', { month: 'long' })}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </aside>
 
           <section className="lg:col-span-9 flex flex-col gap-6">
             <motion.div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" variants={containerVariants} initial="hidden" animate="visible" key={displayedEvents.length}>
               <AnimatePresence mode='popLayout'>
                 {displayedEvents.map(event => {
-                  const isLive = event.fecha === todayStr;
+                  const isLive = event.fecha?.startsWith(todayStr);
                   const eventDay = new Date(event.fecha).getDate();
                   return (
                     <motion.div key={event.id} variants={cardVariants} layout className="group/card relative aspect-[4/5] rounded-[3rem] overflow-hidden border border-white/10 transition-all duration-500 bg-[#120B21] shadow-2xl" >
