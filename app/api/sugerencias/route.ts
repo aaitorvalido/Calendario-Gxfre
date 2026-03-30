@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 // 🔑 Inicializamos Resend con la variable de entorno RESEND_API_KEY
-// Recuerda actualizar esta clave en Vercel con la de la nueva cuenta
+// Recuerda actualizar esta clave en Vercel con la de la nueva cuenta de offgxfre@gmail.com
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
@@ -49,13 +49,13 @@ export async function POST(request: Request) {
       if (supabaseError) console.error('Error en Supabase:', supabaseError);
     }
 
-    // 3. === ENVIAR EL CORREO A LA CUENTA DEL CLIENTE ===
-    // Importante: Al ser la cuenta de csoulgabrieldlc@gmail.com, 
+    // 3. === ENVIAR EL CORREO A LA CUENTA NUEVA ===
+    // Importante: Al ser la cuenta de offgxfre@gmail.com, 
     // Resend permite el envío a sí mismo sin verificar dominio.
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
         from: 'Gxfre Sugerencias <onboarding@resend.dev>',
-        to: ['csoulgabrieldlc@gmail.com'], 
+        to: ['offgxfre@gmail.com'], // ✅ CORREO ACTUALIZADO
         subject: `💡 [Sugerencia] ${nombreUsuario} - ${tipo}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; background-color: #0B0813; border-radius: 28px; color: white; border: 1px solid #1A1625;">
