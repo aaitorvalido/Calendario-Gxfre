@@ -202,7 +202,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ✅ BLOQUE REINSTALADO: Agenda Próxima */}
+            {/* ✅ Agenda Próxima */}
             <div className="bg-white/[0.02] rounded-[2rem] p-6 border border-white/5">
               <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4 px-2">Agenda Próxima</h3>
               <div className="flex flex-col gap-3">
@@ -231,10 +231,12 @@ export default function Home() {
                 {displayedEvents.map(event => {
                   const isLive = event.fecha?.startsWith(todayStr);
                   const eventDay = new Date(event.fecha).getDate();
+                  const isHovered = hoveredDay === eventDay; // ✅ Recuperamos el hover
+
                   return (
-                    <motion.div key={event.id} variants={cardVariants} layout className="group/card relative aspect-[4/5] rounded-[3rem] overflow-hidden border border-white/10 transition-all duration-500 bg-[#120B21] shadow-2xl" >
+                    <motion.div key={event.id} variants={cardVariants} layout className={`group/card relative aspect-[4/5] rounded-[3rem] overflow-hidden border transition-all duration-500 bg-[#120B21] shadow-2xl ${isHovered ? 'scale-[1.05] border-white/40 ring-4 ring-white/5' : 'border-white/10'}`} >
                       <div className="absolute inset-0 z-0">
-                        <img src={event.imagen_url} className="w-full h-full object-cover opacity-40 group-hover/card:scale-110 transition-all duration-1000" alt="" />
+                        <img src={event.imagen_url} className={`w-full h-full object-cover transition-all duration-1000 ${isHovered ? 'scale-110 opacity-60' : 'opacity-40 group-hover/card:scale-110'}`} alt="" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0813] via-transparent to-transparent" />
                       </div>
                       <div className="absolute inset-0 p-8 flex flex-col justify-end z-10 gap-2">
