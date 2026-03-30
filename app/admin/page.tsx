@@ -13,11 +13,11 @@ export default function AdminPanel() {
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // --- ESTADOS CALENDARIO (Añadida hora_fin) ---
+  // --- ESTADOS CALENDARIO ---
   const [calData, setCalData] = useState({ 
     titulo: '', 
     fecha: '', 
-    hora_fin: '', // <--- NUEVO
+    hora_fin: '', 
     descripcion: '', 
     stream_url: '' 
   });
@@ -25,7 +25,7 @@ export default function AdminPanel() {
   const [calStatus, setCalStatus] = useState('idle');
   const [dbEvents, setDbEvents] = useState<any[]>([]); 
 
-  // --- RESTO DE ESTADOS ---
+  // --- ESTADOS VOTACIONES ---
   const [votData, setVotData] = useState({ 
     titulo: '', 
     descripcion: '', 
@@ -33,6 +33,8 @@ export default function AdminPanel() {
     fecha_cierre: '' 
   });
   const [votStatus, setVotStatus] = useState('idle');
+
+  // --- ESTADOS CROPPER ---
   const [srcImage, setSrcImage] = useState<string | null>(null);
   const [isCroppingModalOpen, setIsCroppingModalOpen] = useState(false);
   const cropperRef = useRef<ReactCropperElement>(null);
@@ -140,7 +142,12 @@ export default function AdminPanel() {
       const res = await fetch('/api/admin/votaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...votData, opciones: opcionesValidas }),
+        body: JSON.stringify({ 
+          titulo: votData.titulo, 
+          descripcion: votData.descripcion, 
+          opciones: opcionesValidas,
+          fecha_cierre: votData.fecha_cierre 
+        }),
       });
       if (res.ok) {
         setVotStatus('success');
@@ -163,7 +170,7 @@ export default function AdminPanel() {
             <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Contraseña</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Clave secreta..." className="bg-black/50 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-[#F5C242]" required />
           </div>
-          <button type="submit" disabled={isLoggingIn} className="bg-[#F5C242] text-black font-bold uppercase py-4 rounded-xl hover:scale-105 transition-transform tracking-widest text-sm shadow-lg">
+          <button type="submit" disabled={isLoggingIn} className="bg-[#F5C242] text-black font-bold uppercase py-4 rounded-xl hover:scale-105 transition-all mt-4 disabled:opacity-50">
             {isLoggingIn ? 'Verificando...' : 'Entrar'}
           </button>
         </form>
@@ -230,18 +237,28 @@ export default function AdminPanel() {
             </form>
           </section>
 
-          {/* RESTO DE SECCIONES (VOTACIONES Y GESTIÓN) SE MANTIENEN IGUAL */}
+          {/* SECCIÓN VOTACIONES */}
           <div className="flex flex-col gap-10">
             <section className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md flex flex-col gap-6">
               <h2 className="text-2xl font-bold text-[#7A56B1] uppercase tracking-tighter">Nueva Encuesta</h2>
               <form onSubmit={handleVotacionSubmit} className="flex flex-col gap-4">
                 <input required type="text" placeholder="Pregunta" value={votData.titulo} onChange={e => setVotData({...votData, titulo: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white"/>
+                
                 <div className="grid grid-cols-2 gap-3">
-                  <input required type="text" placeholder="Opción 1" value={votData.op1} onChange={e => setVotData({...votData, op1: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none"/>
-                  <input required type="text" placeholder="Opción 2" value={votData.op2} onChange={e => setVotData({...votData, op2: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none"/>
+                  <input required type="text" placeholder="Opción 1" value={votData.op1} onChange={e => setVotData({...votData, op1: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none focus:border-[#7A56B1]"/>
+                  <input required type="text" placeholder="Opción 2" value={votData.op2} onChange={e => setVotData({...votData, op2: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none focus:border-[#7A56B1]"/>
+                  <input type="text" placeholder="Opción 3" value={votData.op3} onChange={e => setVotData({...votData, op3: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none focus:border-[#7A56B1]"/>
+                  <input type="text" placeholder="Opción 4" value={votData.op4} onChange={e => setVotData({...votData, op4: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none focus:border-[#7A56B1]"/>
                 </div>
-                <input required type="datetime-local" value={votData.fecha_cierre} onChange={e => setVotData({...votData, fecha_cierre: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none"/>
-                <button type="submit" className="bg-[#7A56B1]/20 text-[#7A56B1] py-4 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-[#7A56B1] hover:text-white transition-all">Publicar Votación</button>
+
+                <div className="flex flex-col gap-2 mt-2">
+                  <label className="text-[10px] font-bold text-[#7A56B1] uppercase tracking-widest ml-1">Fecha y Hora de Cierre</label>
+                  <input required type="datetime-local" value={votData.fecha_cierre} onChange={e => setVotData({...votData, fecha_cierre: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none focus:border-[#7A56B1] [&::-webkit-calendar-picker-indicator]:invert"/>
+                </div>
+
+                <button disabled={votStatus === 'loading'} type="submit" className="mt-4 bg-[#7A56B1]/10 border border-[#7A56B1]/20 text-[#7A56B1] font-bold uppercase py-4 rounded-xl hover:bg-[#7A56B1] hover:text-white transition-all text-xs tracking-widest shadow-lg">
+                  {votStatus === 'loading' ? 'Publicando...' : 'Publicar Votación'}
+                </button>
               </form>
             </section>
 
@@ -266,14 +283,14 @@ export default function AdminPanel() {
       {/* MODAL RECORTADOR */}
       {isCroppingModalOpen && srcImage && (
         <div className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-4 backdrop-blur-xl">
-          <div className="bg-[#0B0813] border border-white/10 rounded-[3rem] w-full max-w-5xl h-[90vh] p-8 flex flex-col gap-6">
-            <h3 className="text-2xl font-bold text-[#F5C242] uppercase tracking-tighter">RECORTAR IMAGEN</h3>
-            <div className="flex-grow w-full rounded-3xl overflow-hidden border border-white/10 bg-black/50">
+          <div className="bg-[#0B0813] border border-white/10 rounded-[3rem] w-full max-w-5xl h-[90vh] p-8 flex flex-col gap-6 shadow-2xl">
+            <h3 className="text-2xl font-bold text-[#F5C242] uppercase tracking-tighter leading-none">RECORTAR IMAGEN</h3>
+            <div className="flex-grow w-full rounded-3xl overflow-hidden border border-white/10 bg-black/50 min-h-0">
               <Cropper src={srcImage} style={{ height: "100%", width: "100%" }} guides={true} ref={cropperRef} viewMode={1} background={false} responsive={true} autoCropArea={1} />
             </div>
-            <footer className="flex justify-end gap-4">
-              <button onClick={() => { setIsCroppingModalOpen(false); setSrcImage(null); }} className="px-8 py-5 rounded-2xl text-[10px] font-bold uppercase bg-white/5 text-gray-400">Cancelar</button>
-              <button onClick={handleCrop} className="px-12 py-5 rounded-2xl text-[10px] font-bold uppercase bg-[#F5C242]/10 text-[#F5C242] hover:bg-[#F5C242] hover:text-black transition-all">Guardar Recorte ✓</button>
+            <footer className="flex justify-end gap-4 mt-2">
+              <button onClick={() => { setIsCroppingModalOpen(false); setSrcImage(null); }} className="px-8 py-5 rounded-2xl text-[10px] font-bold uppercase border border-white/5 bg-white/5 text-gray-400">Cancelar</button>
+              <button onClick={handleCrop} className="px-12 py-5 rounded-2xl text-[10px] font-bold uppercase border border-[#F5C242]/30 bg-[#F5C242]/10 text-[#F5C242] hover:bg-[#F5C242] hover:text-black transition-all">Guardar Recorte ✓</button>
             </footer>
           </div>
         </div>
