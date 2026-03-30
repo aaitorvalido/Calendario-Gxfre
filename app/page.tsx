@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession, signOut } from 'next-auth/react';
 
-// 🖋️ FUENTE LIMPIA Y FINA (Estilo BaityBait)
+// 🖋️ FUENTE INTER
 import { Inter } from 'next/font/google';
 const logoFont = Inter({ subsets: ['latin'], weight: ['400', '500'] });
 
@@ -30,14 +30,20 @@ export default function Home() {
   const { data: session } = useSession();
   const [dbEvents, setDbEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // ✅ FECHA DINÁMICA
-  const todayStr = useMemo(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  // ✅ ACTUALIZAR HORA CADA MINUTO
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
-  // --- ⌨️ ACCESO SECRETO AL PANEL (Ctrl + Shift + A) ---
+  const todayStr = useMemo(() => {
+    const d = currentTime;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, [currentTime]);
+
+  // --- ⌨️ ACCESO SECRETO (Ctrl + Shift + A) ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
@@ -49,6 +55,7 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [router]);
 
+  // --- CARGAR EVENTOS ---
   useEffect(() => {
     fetch('/api/calendario')
       .then(res => res.ok ? res.json() : [])
@@ -79,15 +86,19 @@ export default function Home() {
     };
   }, [viewDate]);
 
-  const futureEvents = useMemo(() => {
-    return dbEvents
-      .filter(e => {
-        const eventDate = e.fecha?.split('T')[0];
-        return eventDate >= todayStr;
-      })
-      .sort((a, b) => a.fecha.localeCompare(b.fecha))
-      .slice(0, 3);
-  }, [dbEvents, todayStr]);
+  // ✅ VALIDACIÓN "EN DIRECTO" CON HORA_FIN
+  const checkIsLive = (eventDate: string, horaFin: string) => {
+    const isToday = eventDate.split('T')[0] === todayStr;
+    if (!isToday) return false;
+    if (!horaFin) return true; 
+
+    const [hFin, mFin] = horaFin.split(':').map(Number);
+    const ahora = currentTime;
+    const fin = new Date();
+    fin.setHours(hFin, mFin, 0);
+
+    return ahora < fin; 
+  };
 
   const displayedEvents = useMemo(() => {
     const monthStr = String(viewDate.getMonth() + 1).padStart(2, '0');
@@ -103,16 +114,28 @@ export default function Home() {
     return events;
   }, [selectedDay, viewDate, year, searchTerm, dbEvents]);
 
+  // ✅ ARREGLADO: DETECTAR SI ALGÚN EVENTO DEL DÍA ESTÁ EN DIRECTO
   const activeColor = useMemo(() => {
     const dayToTrack = hoveredDay || selectedDay;
+    
     if (dayToTrack) {
       const dateStr = `${year}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(dayToTrack).padStart(2, '0')}`;
-      if (dateStr === todayStr) return '#EF4444';
-      const hasEvent = dbEvents.some(e => e.fecha?.startsWith(dateStr));
-      return hasEvent ? '#7A56B1' : '#1a162e';
+      const eventsOnDay = dbEvents.filter(e => e.fecha?.startsWith(dateStr));
+      
+      if (eventsOnDay.length === 0) return '#1a162e'; 
+
+      if (dateStr === todayStr) {
+        // Si ALGUNO de los eventos de hoy está Live, devuelve Rojo
+        const isAnythingLive = eventsOnDay.some(e => checkIsLive(e.fecha, e.hora_fin));
+        return isAnythingLive ? '#EF4444' : '#7A56B1';
+      }
+      return '#7A56B1';
     }
-    return dbEvents.some(e => e.fecha?.startsWith(todayStr)) ? '#EF4444' : '#7A56B1';
-  }, [selectedDay, hoveredDay, dbEvents, todayStr, year, viewDate]);
+
+    const todayEvents = dbEvents.filter(e => e.fecha?.startsWith(todayStr));
+    const isAnythingLiveNow = todayEvents.some(e => checkIsLive(e.fecha, e.hora_fin));
+    return isAnythingLiveNow ? '#EF4444' : '#7A56B1';
+  }, [selectedDay, hoveredDay, dbEvents, todayStr, year, viewDate, currentTime]);
 
   return (
     <main className="min-h-screen bg-[#0B0813] text-white px-4 py-6 md:px-12 md:pt-6 md:pb-12 font-sans select-none overflow-x-hidden relative">
@@ -120,11 +143,11 @@ export default function Home() {
 
       <div className="max-w-[1600px] mx-auto relative z-10">
         
-        {/* SALUDO DE BIENVENIDA */}
+        {/* SALUDO */}
         <div className="w-full flex justify-center mb-6">
           <AnimatePresence mode="wait">
             {session?.user && (
-              <motion.div initial={{ opacity: 0, y: -20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }} transition={{ type: 'spring', stiffness: 120, damping: 15 }} className="bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-3 rounded-full flex items-center gap-5 shadow-[0_0_40px_rgba(0,0,0,0.4)]">
+              <motion.div initial={{ opacity: 0, y: -20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }} className="bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-3 rounded-full flex items-center gap-5 shadow-[0_0_40px_rgba(0,0,0,0.4)]">
                 <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.8)]" />
                 <span className="text-[11px] font-black uppercase tracking-[0.25em] text-gray-300">
                   Bienvenido, <span className="text-[#F5C242]">{session.user.name || 'Gxfre User'}</span>
@@ -139,10 +162,9 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center gap-6 cursor-pointer xl:flex-1" onClick={() => { setSelectedDay(null); setSearchTerm(''); }}>
             <div className="relative w-24 h-24 flex items-center justify-center group"> 
               <div className="absolute inset-0 rounded-full blur-2xl opacity-10 transition-all duration-1000 group-hover:opacity-40 group-hover:scale-150" style={{ backgroundColor: activeColor }} />
-              <Image src="/logo-gxfre.png" alt="Logo" fill sizes="96px" className="object-contain relative z-10 transition-transform duration-500 ease-out group-hover:scale-125" priority />
+              <Image src="/logo-gxfre.png" alt="Logo" fill sizes="96px" className="object-contain relative z-10 transition-transform duration-500 group-hover:scale-125" priority />
             </div>
             <div className="text-center sm:text-left">
-              {/* ✅ TEXTO FINO Y NUEVO SUBTÍTULO */}
               <h1 className={`text-4xl md:text-5xl tracking-wide uppercase transition-all duration-500 font-normal ${logoFont.className}`} style={{ color: activeColor === '#EF4444' ? '#EF4444' : 'white', textShadow: activeColor === '#EF4444' ? '0 0 20px rgba(239, 68, 68, 0.5)' : 'none' }}>GXFRE</h1>
               <p className={`text-[10px] text-gray-300 uppercase tracking-widest mt-1.5 font-medium ${logoFont.className}`}>CALENDARIO DE DIRECTOS Y EVENTOS DE GXFRE</p>
             </div>
@@ -159,9 +181,8 @@ export default function Home() {
               <div className="relative w-full md:w-64">
                 <input type="text" placeholder="Buscar stream..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-full px-5 py-3 text-xs font-bold outline-none transition-all" style={{ borderColor: `${activeColor}44` }} />
               </div>
-              
               <button onClick={() => { setSelectedDay(null); setSearchTerm(''); }} className="px-5 py-3 rounded-full text-[10px] font-black uppercase italic bg-white/5 border border-white/10 hover:bg-white/10 transition-all">Ver todo</button>
-
+              
               <div className="flex gap-2">
                 <a href="https://twitch.tv/gxfre" target="_blank" className="w-10 h-10 flex items-center justify-center bg-[#9146FF]/10 border border-[#9146FF]/20 rounded-full hover:bg-[#9146FF] transition-all group/social">
                   <svg className="w-4 h-4 fill-[#9146FF] group-hover/social:fill-white" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
@@ -180,12 +201,11 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <aside className="lg:col-span-3 flex flex-col gap-6">
             <div className="bg-white/[0.03] backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/10 shadow-2xl relative overflow-hidden transition-all duration-1000">
-              
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl md:text-2xl font-black text-white uppercase italic capitalize leading-none">{monthName} <span className="text-[#F5C242]">{year}</span></h2>
-                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/10 shadow-inner">
-                   <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-xl hover:text-[#F5C242] transition-colors font-black text-lg">‹</button>
-                   <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-xl hover:text-[#F5C242] transition-colors font-black text-lg">›</button>
+                <h2 className="text-xl md:text-2xl font-black text-white uppercase italic leading-none">{monthName} <span className="text-[#F5C242]">{year}</span></h2>
+                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/10">
+                   <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-xl transition-colors font-black text-lg">‹</button>
+                   <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-xl transition-colors font-black text-lg">›</button>
                 </div>
               </div>
 
@@ -196,8 +216,8 @@ export default function Home() {
                 {Array.from({ length: startOffset }).map((_, i) => <div key={i}></div>)}
                 {daysArray.map(day => {
                   const dateStr = `${year}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                  const hasEvent = dbEvents.some(e => e.fecha?.startsWith(dateStr));
-                  const isToday = dateStr === todayStr;
+                  const events = dbEvents.filter(e => e.fecha?.startsWith(dateStr));
+                  const isAnyLive = events.some(e => checkIsLive(e.fecha, e.hora_fin));
                   return (
                     <div key={day} 
                       onClick={() => setSelectedDay(day)}
@@ -205,33 +225,12 @@ export default function Home() {
                       onMouseLeave={() => setHoveredDay(null)}
                       className={`aspect-square flex items-center justify-center rounded-xl text-sm font-black cursor-pointer transition-all duration-300 relative ${selectedDay === day ? 'bg-white text-black scale-110 shadow-2xl z-10' : 'text-gray-200 hover:bg-white/10'}`}>
                       {day}
-                      {hasEvent && !(selectedDay === day) && (
-                        <div className="w-1.5 h-1.5 rounded-full absolute bottom-1.5" style={{ backgroundColor: isToday ? '#EF4444' : '#7A56B1' }}></div>
+                      {events.length > 0 && !(selectedDay === day) && (
+                        <div className="w-1.5 h-1.5 rounded-full absolute bottom-1.5" style={{ backgroundColor: isAnyLive ? '#EF4444' : '#7A56B1' }}></div>
                       )}
                     </div>
                   );
                 })}
-              </div>
-            </div>
-
-            <div className="bg-white/[0.02] rounded-[2rem] p-6 border border-white/5">
-              <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4 px-2">Agenda Próxima</h3>
-              <div className="flex flex-col gap-3">
-                {futureEvents.map(event => (
-                  <div key={event.id} className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer" onClick={() => {
-                    const [y, m, d] = event.fecha.split('T')[0].split('-').map(Number);
-                    setViewDate(new Date(y, m - 1, 1));
-                    setSelectedDay(d);
-                  }}>
-                    <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center text-[10px] font-black italic border border-white/10" style={{ color: event.fecha?.startsWith(todayStr) ? '#EF4444' : '#7A56B1' }}>
-                      {event.fecha?.split('T')[0].split('-')[2]}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[11px] font-black uppercase italic truncate">{event.titulo}</span>
-                      <span className="text-[9px] text-gray-500 font-bold uppercase">{new Date(event.fecha).toLocaleDateString('es-ES', { month: 'long' })}</span>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </aside>
@@ -241,26 +240,34 @@ export default function Home() {
               <AnimatePresence mode='popLayout'>
                 {displayedEvents.map(event => {
                   const eventDateStr = event.fecha?.split('T')[0];
-                  const isLive = eventDateStr === todayStr;
-                  const isPast = eventDateStr < todayStr;
+                  const isLiveNow = checkIsLive(event.fecha, event.hora_fin);
+                  const isPast = eventDateStr < todayStr || (eventDateStr === todayStr && !isLiveNow);
                   const eventDay = new Date(event.fecha).getDate();
-                  const isHovered = hoveredDay === eventDay;
 
                   return (
-                    <motion.div key={event.id} variants={cardVariants} layout className={`group/card relative aspect-[4/5] rounded-[3rem] overflow-hidden border transition-all duration-500 bg-[#120B21] shadow-2xl ${isHovered ? 'scale-[1.05] border-white/40 ring-4 ring-white/5' : 'border-white/10'}`} >
+                    <motion.div key={event.id} variants={cardVariants} layout className={`group/card relative aspect-[4/5] rounded-[3rem] overflow-hidden border transition-all duration-500 bg-[#120B21] shadow-2xl ${hoveredDay === eventDay ? 'scale-[1.05] border-white/40' : 'border-white/10'}`} >
                       <div className="absolute inset-0 z-0">
-                        <img src={event.imagen_url} className={`w-full h-full object-cover transition-all duration-1000 ${isHovered ? 'scale-110 opacity-60' : 'opacity-40 group-hover/card:scale-110'}`} alt="" />
+                        <img src={event.imagen_url} className="w-full h-full object-cover opacity-40 transition-all duration-1000 group-hover/card:scale-110" alt="" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0813] via-transparent to-transparent" />
                       </div>
+
                       <div className="absolute inset-0 p-8 flex flex-col justify-end z-10 gap-2">
-                        <span className={`w-max px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md 
-                          ${isLive ? 'bg-red-600 animate-pulse' : isPast ? 'bg-gray-600 opacity-50' : 'bg-white/10'}`}>
-                          {isLive ? '🔴 EN DIRECTO' : isPast ? 'FINALIZADO' : 'PRÓXIMAMENTE'}
-                        </span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`w-max px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md 
+                            ${isLiveNow ? 'bg-red-600 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' : isPast ? 'bg-gray-800 opacity-70' : 'bg-[#7A56B1]'}`}>
+                            {isLiveNow ? '🔴 EN DIRECTO' : isPast ? 'FINALIZADO' : 'PRÓXIMAMENTE'}
+                          </span>
+                          {isLiveNow && event.hora_fin && (
+                            <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-[#F5C242] border border-[#F5C242]/30 bg-black/40 backdrop-blur-md">
+                              HASTA LAS {event.hora_fin}
+                            </span>
+                          )}
+                        </div>
                         
                         <h3 className="text-3xl font-black text-white italic tracking-tighter drop-shadow-lg uppercase leading-none mb-1">{event.titulo}</h3>
                         <p className="text-xs text-[#F5C242] font-black uppercase tracking-widest mb-1">{eventDay} de {new Date(event.fecha).toLocaleString('es-ES', { month: 'long' })}</p>
                         <p className="text-[11px] text-gray-400 font-medium line-clamp-2 leading-relaxed">{event.descripcion}</p>
+                        
                         <div className="mt-4 flex gap-3 translate-y-4 opacity-0 group-hover/card:translate-y-0 group-hover/card:opacity-100 transition-all duration-500">
                           <a href={event.stream_url} target="_blank" className="flex-grow py-4 rounded-2xl font-black uppercase italic text-center text-[10px] bg-white text-black hover:bg-[#F5C242] transition-all shadow-xl">Ir al Directo</a>
                         </div>

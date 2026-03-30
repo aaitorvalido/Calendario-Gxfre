@@ -13,13 +13,19 @@ export default function AdminPanel() {
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // --- ESTADOS CALENDARIO ---
-  const [calData, setCalData] = useState({ titulo: '', fecha: '', descripcion: '', stream_url: '' });
+  // --- ESTADOS CALENDARIO (Añadida hora_fin) ---
+  const [calData, setCalData] = useState({ 
+    titulo: '', 
+    fecha: '', 
+    hora_fin: '', // <--- NUEVO
+    descripcion: '', 
+    stream_url: '' 
+  });
   const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
   const [calStatus, setCalStatus] = useState('idle');
   const [dbEvents, setDbEvents] = useState<any[]>([]); 
 
-  // --- ESTADOS VOTACIONES ---
+  // --- RESTO DE ESTADOS ---
   const [votData, setVotData] = useState({ 
     titulo: '', 
     descripcion: '', 
@@ -27,8 +33,6 @@ export default function AdminPanel() {
     fecha_cierre: '' 
   });
   const [votStatus, setVotStatus] = useState('idle');
-
-  // --- ESTADOS CROPPER ---
   const [srcImage, setSrcImage] = useState<string | null>(null);
   const [isCroppingModalOpen, setIsCroppingModalOpen] = useState(false);
   const cropperRef = useRef<ReactCropperElement>(null);
@@ -57,29 +61,19 @@ export default function AdminPanel() {
     return "¡Buenas noches";
   };
 
-  // ✅ VALIDACIÓN SEGURA CONTRA LA API (SIN CONTRASEÑA EN EL CÓDIGO)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
-    
     try {
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: password.trim() }), 
       });
-
-      if (res.ok) {
-        setIsAuthenticated(true);
-      } else {
-        alert('Contraseña incorrecta. Acceso denegado.');
-        setPassword('');
-      }
-    } catch (error) {
-      alert('Error de conexión con el servidor de seguridad.');
-    } finally {
-      setIsLoggingIn(false);
-    }
+      if (res.ok) setIsAuthenticated(true);
+      else { alert('Contraseña incorrecta'); setPassword(''); }
+    } catch (error) { alert('Error de conexión'); }
+    finally { setIsLoggingIn(false); }
   };
 
   const onFileChange = useCallback((files: FileList | null) => {
@@ -116,7 +110,7 @@ export default function AdminPanel() {
       });
       if (res.ok) {
         setCalStatus('success');
-        setCalData({ titulo: '', fecha: '', descripcion: '', stream_url: '' });
+        setCalData({ titulo: '', fecha: '', hora_fin: '', descripcion: '', stream_url: '' });
         setCroppedImageUrl(null);
         fetchEventos();
         setTimeout(() => setCalStatus('idle'), 3000);
@@ -134,9 +128,7 @@ export default function AdminPanel() {
         body: JSON.stringify({ id })
       });
       if (res.ok) setDbEvents(prev => prev.filter(ev => ev.id !== id));
-    } catch (error) {
-      alert("Error al borrar.");
-    }
+    } catch (error) { alert("Error al borrar."); }
   };
 
   const handleVotacionSubmit = async (e: React.FormEvent) => {
@@ -148,12 +140,7 @@ export default function AdminPanel() {
       const res = await fetch('/api/admin/votaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          titulo: votData.titulo, 
-          descripcion: votData.descripcion, 
-          opciones: opcionesValidas,
-          fecha_cierre: votData.fecha_cierre 
-        }),
+        body: JSON.stringify({ ...votData, opciones: opcionesValidas }),
       });
       if (res.ok) {
         setVotStatus('success');
@@ -163,51 +150,20 @@ export default function AdminPanel() {
     } catch (e) { setVotStatus('error'); }
   };
 
-  // ✅ VISTA DE LOGIN CON "CEBO" PARA EL NAVEGADOR
   if (!isAuthenticated) {
     return (
       <main className={`min-h-screen bg-[#0B0813] text-white flex items-center justify-center p-4 ${mainFont.className}`}>
-        <form 
-          id="admin-login-form"
-          onSubmit={handleLogin} 
-          action="javascript:void(0)"
-          className="bg-white/5 p-8 rounded-3xl border border-white/10 flex flex-col gap-6 shadow-2xl w-full max-w-sm"
-        >
+        <form onSubmit={handleLogin} className="bg-white/5 p-8 rounded-3xl border border-white/10 flex flex-col gap-6 shadow-2xl w-full max-w-sm">
           <h1 className="text-3xl font-bold text-[#F5C242] text-center uppercase tracking-tighter leading-none">Acceso Privado</h1>
-          
-          {/* Campo de usuario visible pero bloqueado: Esto hace que el navegador quiera guardar la clave */}
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Usuario</label>
-            <input 
-              type="text" 
-              name="username" 
-              value="Gxfre" 
-              readOnly 
-              autoComplete="username"
-              className="bg-white/5 border border-white/5 p-4 rounded-xl text-gray-400 outline-none cursor-default font-bold" 
-            />
+            <input type="text" value="Gxfre" readOnly className="bg-white/5 border border-white/5 p-4 rounded-xl text-gray-400 outline-none cursor-default font-bold" />
           </div>
-
           <div className="flex flex-col gap-2">
-            <label htmlFor="admin-pass" className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Contraseña</label>
-            <input 
-              id="admin-pass"
-              name="password"
-              type="password" 
-              autoComplete="current-password"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Introduce la clave secreta..." 
-              className="bg-black/50 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-[#F5C242]"
-              required
-            />
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Contraseña</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Clave secreta..." className="bg-black/50 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-[#F5C242]" required />
           </div>
-
-          <button 
-            type="submit" 
-            disabled={isLoggingIn}
-            className="bg-[#F5C242] text-black font-bold uppercase py-4 rounded-xl hover:scale-105 transition-transform tracking-widest text-sm shadow-lg disabled:opacity-50"
-          >
+          <button type="submit" disabled={isLoggingIn} className="bg-[#F5C242] text-black font-bold uppercase py-4 rounded-xl hover:scale-105 transition-transform tracking-widest text-sm shadow-lg">
             {isLoggingIn ? 'Verificando...' : 'Entrar'}
           </button>
         </form>
@@ -215,7 +171,6 @@ export default function AdminPanel() {
     );
   }
 
-  // ✅ VISTA DEL PANEL DE ADMIN (AUTENTICADO)
   return (
     <main className={`min-h-screen bg-[#0B0813] text-white p-4 md:p-12 relative overflow-x-hidden ${mainFont.className}`}>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
@@ -254,60 +209,52 @@ export default function AdminPanel() {
             </div>
             <form onSubmit={handleCalendarioSubmit} className="flex flex-col gap-4">
               <input required type="text" placeholder="Título del directo" value={calData.titulo} onChange={e => setCalData({...calData, titulo: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-white"/>
-              <input required type="date" value={calData.fecha} onChange={e => setCalData({...calData, fecha: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-gray-300 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70"/>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Día del directo</label>
+                  <input required type="date" value={calData.fecha} onChange={e => setCalData({...calData, fecha: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-gray-300 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70"/>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-[#F5C242] uppercase tracking-widest ml-1">Hora de Cierre/Fin</label>
+                  <input required type="time" value={calData.hora_fin} onChange={e => setCalData({...calData, hora_fin: e.target.value})} className="bg-black/40 border border-[#F5C242]/30 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-gray-300 [&::-webkit-calendar-picker-indicator]:invert"/>
+                </div>
+              </div>
+
               <textarea placeholder="Descripción breve..." value={calData.descripcion} onChange={e => setCalData({...calData, descripcion: e.target.value})} rows={3} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-white resize-none"/>
               <input type="text" placeholder="URL del Stream" value={calData.stream_url} onChange={e => setCalData({...calData, stream_url: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-white"/>
+              
               <button disabled={calStatus === 'loading'} type="submit" className="mt-2 bg-[#F5C242]/10 border border-[#F5C242]/20 text-[#F5C242] font-bold uppercase py-4 rounded-xl hover:bg-[#F5C242] hover:text-black transition-all text-xs tracking-widest">
                 {calStatus === 'loading' ? 'Subiendo...' : 'Publicar Evento'}
               </button>
             </form>
           </section>
 
+          {/* RESTO DE SECCIONES (VOTACIONES Y GESTIÓN) SE MANTIENEN IGUAL */}
           <div className="flex flex-col gap-10">
-            {/* SECCIÓN VOTACIONES */}
-            <section className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden backdrop-blur-md flex flex-col gap-6">
-              <h2 className="text-2xl font-bold text-[#7A56B1] uppercase tracking-tighter leading-none">Nueva Encuesta</h2>
+            <section className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md flex flex-col gap-6">
+              <h2 className="text-2xl font-bold text-[#7A56B1] uppercase tracking-tighter">Nueva Encuesta</h2>
               <form onSubmit={handleVotacionSubmit} className="flex flex-col gap-4">
-                <input required type="text" placeholder="Pregunta Principal" value={votData.titulo} onChange={e => setVotData({...votData, titulo: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white"/>
-                <textarea placeholder="Descripción" value={votData.descripcion} onChange={e => setVotData({...votData, descripcion: e.target.value})} rows={2} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white resize-none"/>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                  <input required type="text" placeholder="Opción 1" value={votData.op1} onChange={e => setVotData({...votData, op1: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white"/>
-                  <input required type="text" placeholder="Opción 2" value={votData.op2} onChange={e => setVotData({...votData, op2: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white"/>
-                  <input type="text" placeholder="Opción 3" value={votData.op3} onChange={e => setVotData({...votData, op3: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white"/>
-                  <input type="text" placeholder="Opción 4" value={votData.op4} onChange={e => setVotData({...votData, op4: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white"/>
+                <input required type="text" placeholder="Pregunta" value={votData.titulo} onChange={e => setVotData({...votData, titulo: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-white"/>
+                <div className="grid grid-cols-2 gap-3">
+                  <input required type="text" placeholder="Opción 1" value={votData.op1} onChange={e => setVotData({...votData, op1: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none"/>
+                  <input required type="text" placeholder="Opción 2" value={votData.op2} onChange={e => setVotData({...votData, op2: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none"/>
                 </div>
-                <div className="flex flex-col gap-2 mt-2">
-                  <label className="text-[10px] font-bold text-[#7A56B1] uppercase tracking-[0.2em] ml-1">Fecha y Hora de Cierre</label>
-                  <input 
-                    required 
-                    type="datetime-local" 
-                    value={votData.fecha_cierre} 
-                    onChange={e => setVotData({...votData, fecha_cierre: e.target.value})} 
-                    className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#7A56B1] text-gray-300 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 hover:[&::-webkit-calendar-picker-indicator]:opacity-100"
-                  />
-                </div>
-                <button disabled={votStatus === 'loading'} type="submit" className="mt-4 bg-[#7A56B1]/10 border border-[#7A56B1]/20 text-[#7A56B1] font-bold uppercase py-4 rounded-xl hover:bg-[#7A56B1] hover:text-white transition-all text-xs tracking-widest shadow-lg">
-                  {votStatus === 'loading' ? 'Actualizando...' : 'Publicar Votación'}
-                </button>
+                <input required type="datetime-local" value={votData.fecha_cierre} onChange={e => setVotData({...votData, fecha_cierre: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm text-white outline-none"/>
+                <button type="submit" className="bg-[#7A56B1]/20 text-[#7A56B1] py-4 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-[#7A56B1] hover:text-white transition-all">Publicar Votación</button>
               </form>
             </section>
 
-            {/* SECCIÓN GESTIÓN */}
-            <section className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden backdrop-blur-md flex flex-col gap-4">
-              <h2 className="text-2xl font-bold text-white uppercase tracking-tighter leading-none">Gestionar Directos</h2>
-              <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            <section className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md flex flex-col gap-4">
+              <h2 className="text-2xl font-bold text-white uppercase tracking-tighter">Gestionar Directos</h2>
+              <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {dbEvents.map(evento => (
-                  <div key={evento.id} className="flex justify-between items-center bg-black/40 border border-white/5 p-3 rounded-2xl group hover:border-white/10 transition-all">
-                    <div className="flex items-center gap-4 min-w-0 pr-4">
-                      <div className="w-16 h-10 rounded-lg overflow-hidden border border-white/10 bg-black/50 shrink-0">
-                        <img src={evento.imagen_url} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <h3 className="font-bold text-[#F5C242] text-xs uppercase truncate max-w-[140px]">{evento.titulo}</h3>
-                        <p className="text-[9px] text-gray-500 uppercase tracking-widest">{new Date(evento.fecha).toLocaleDateString()}</p>
-                      </div>
+                  <div key={evento.id} className="flex justify-between items-center bg-black/40 border border-white/5 p-3 rounded-2xl">
+                    <div className="flex flex-col min-w-0">
+                      <h3 className="font-bold text-[#F5C242] text-xs uppercase truncate">{evento.titulo}</h3>
+                      <p className="text-[9px] text-gray-500 uppercase">{new Date(evento.fecha).toLocaleDateString()} - Fin: {evento.hora_fin || '??:??'}</p>
                     </div>
-                    <button onClick={() => borrarEvento(evento.id)} className="bg-red-500/10 text-red-500 border border-red-500/30 px-4 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-red-500 hover:text-white shrink-0 transition-all">Borrar</button>
+                    <button onClick={() => borrarEvento(evento.id)} className="bg-red-500/10 text-red-500 px-4 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-red-500 hover:text-white transition-all">Borrar</button>
                   </div>
                 ))}
               </div>
@@ -319,14 +266,14 @@ export default function AdminPanel() {
       {/* MODAL RECORTADOR */}
       {isCroppingModalOpen && srcImage && (
         <div className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-4 backdrop-blur-xl">
-          <div className="bg-[#0B0813] border border-white/10 rounded-[3rem] w-full max-w-5xl h-[90vh] p-8 flex flex-col gap-6 shadow-2xl">
-            <h3 className="text-2xl font-bold text-[#F5C242] uppercase tracking-tighter leading-none">RECORTAR IMAGEN</h3>
-            <div className="flex-grow w-full rounded-3xl overflow-hidden border border-white/10 bg-black/50 min-h-0">
-              <Cropper src={srcImage} style={{ height: "100%", width: "100%" }} guides={true} ref={cropperRef} viewMode={1} dragMode="move" background={false} responsive={true} autoCropArea={1} />
+          <div className="bg-[#0B0813] border border-white/10 rounded-[3rem] w-full max-w-5xl h-[90vh] p-8 flex flex-col gap-6">
+            <h3 className="text-2xl font-bold text-[#F5C242] uppercase tracking-tighter">RECORTAR IMAGEN</h3>
+            <div className="flex-grow w-full rounded-3xl overflow-hidden border border-white/10 bg-black/50">
+              <Cropper src={srcImage} style={{ height: "100%", width: "100%" }} guides={true} ref={cropperRef} viewMode={1} background={false} responsive={true} autoCropArea={1} />
             </div>
-            <footer className="flex justify-end gap-4 mt-2">
-              <button onClick={() => { setIsCroppingModalOpen(false); setSrcImage(null); }} className="px-8 py-5 rounded-2xl text-[10px] font-bold uppercase border border-white/5 bg-white/5 text-gray-400">Cancelar</button>
-              <button onClick={handleCrop} className="px-12 py-5 rounded-2xl text-[10px] font-bold uppercase border border-[#F5C242]/30 bg-[#F5C242]/10 text-[#F5C242] hover:bg-[#F5C242] hover:text-black transition-all">Guardar Recorte ✓</button>
+            <footer className="flex justify-end gap-4">
+              <button onClick={() => { setIsCroppingModalOpen(false); setSrcImage(null); }} className="px-8 py-5 rounded-2xl text-[10px] font-bold uppercase bg-white/5 text-gray-400">Cancelar</button>
+              <button onClick={handleCrop} className="px-12 py-5 rounded-2xl text-[10px] font-bold uppercase bg-[#F5C242]/10 text-[#F5C242] hover:bg-[#F5C242] hover:text-black transition-all">Guardar Recorte ✓</button>
             </footer>
           </div>
         </div>

@@ -11,10 +11,12 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
+    // 1. Extraemos 'hora_fin' de los datos que vienen del formulario
     const { error } = await supabase.from('calendario').insert([
       { 
         titulo: data.titulo,
         fecha: data.fecha,
+        hora_fin: data.hora_fin, // <--- NUEVA COLUMNA AÑADIDA
         descripcion: data.descripcion,
         stream_url: data.stream_url,
         imagen_url: data.imagen_base64 
