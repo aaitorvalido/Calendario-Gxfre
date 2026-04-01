@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from "next-auth/next";
-// ✅ CAMBIO AQUÍ: Importamos desde /options
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
+// 🛡️ CONEXIÓN BLINDADA: Usamos la llave maestra para saltar el RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SECRET_KEY!;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY!; 
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // 1. LEER VOTOS Y COMPROBAR PARTICIPACIÓN (GET)
@@ -13,7 +14,6 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     
-    // Traemos todas las opciones de votación actuales
     const { data: opciones, error: errVotos } = await supabase
       .from('votaciones')
       .select('*')
@@ -23,7 +23,6 @@ export async function GET() {
 
     let haVotado = false;
 
-    // Lógica inteligente: ¿Ha votado el usuario en alguna de las opciones que están en pantalla?
     if (session?.user?.email && opciones && opciones.length > 0) {
       const idsActuales = opciones.map(o => String(o.id));
 
@@ -31,7 +30,7 @@ export async function GET() {
         .from('registro_votos')
         .select('voto_id')
         .eq('usuario_email', session.user.email)
-        .in('voto_id', idsActuales) // Buscamos si hay un voto para estas opciones específicas
+        .in('voto_id', idsActuales)
         .maybeSingle();
       
       if (registro) haVotado = true;
@@ -44,20 +43,19 @@ export async function GET() {
   }
 }
 
-// 2. REGISTRAR VOTO ÚNICO POR CATEGORÍA (POST)
+// 2. REGISTRAR VOTO ÚNICO (POST)
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Verificamos sesión
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Debes estar logueado para votar" }, { status: 401 });
     }
 
-    const { id } = await request.json(); // ID de la opción elegida
+    const { id } = await request.json(); 
     const idString = String(id);
 
-    // A. Intentamos registrar el voto (La base de datos bloqueará si el email+id ya existen)
+    // Intentamos registrar el voto en la tabla bloqueada
     const { error: errReg } = await supabase
       .from('registro_votos')
       .insert([
@@ -67,12 +65,12 @@ export async function POST(request: Request) {
         }
       ]);
 
-    // Si el registro falla por duplicado (UNIQUE constraint)
     if (errReg) {
+      // Si el error es por duplicado, es que ya votó
       return NextResponse.json({ error: "Ya has participado en esta votación" }, { status: 400 });
     }
 
-    // B. Si el registro fue exitoso, sumamos el voto en la tabla principal
+    // Si el registro fue OK, sumamos +1 al contador
     const { data: current } = await supabase
       .from('votaciones')
       .select('votos')
@@ -87,7 +85,7 @@ export async function POST(request: Request) {
     if (errUpdate) throw errUpdate;
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error en POST votaciones:", error);
     return NextResponse.json({ error: 'Error al procesar el voto' }, { status: 500 });
   }

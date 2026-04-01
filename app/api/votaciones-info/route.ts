@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// 🛡️ CONEXIÓN BLINDADA: Usamos la llave maestra para saltar el RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SECRET_KEY!;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY!; 
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET() {
@@ -14,8 +16,15 @@ export async function GET() {
       .single();
 
     if (error) throw error;
+
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ titulo: "VOTACIONES", descripcion: "Cargando encuesta..." });
+    console.error("Error cargando info de votaciones:", error);
+    // Fallback por si la base de datos no responde o la tabla está vacía
+    return NextResponse.json({ 
+      titulo: "VOTACIONES", 
+      descripcion: "Cargando encuesta...",
+      fecha_cierre: null 
+    });
   }
 }
