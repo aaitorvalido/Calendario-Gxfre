@@ -19,10 +19,12 @@ export async function GET() {
       .lt('fecha', fechaCorte); 
 
     // 3. LECTURA: Traemos el resto de eventos
+    // ✅ He añadido 'hora_inicio' al orden para que Supabase los mande ya organizados
     const { data, error } = await supabase
       .from('calendario')
       .select('*')
-      .order('fecha', { ascending: true });
+      .order('fecha', { ascending: true })
+      .order('hora_inicio', { ascending: true }); // <--- Orden secundario por hora
 
     if (error) {
       console.error("Error Supabase:", error.message);

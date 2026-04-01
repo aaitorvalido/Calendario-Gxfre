@@ -11,12 +11,12 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
-    // 1. Extraemos 'hora_fin' de los datos que vienen del formulario
+    // ✅ Sincronizado: Usamos 'hora_inicio' para insertar en la base de datos
     const { error } = await supabase.from('calendario').insert([
       { 
         titulo: data.titulo,
         fecha: data.fecha,
-        hora_fin: data.hora_fin, // <--- NUEVA COLUMNA AÑADIDA
+        hora_inicio: data.hora_inicio, // <--- CAMBIADO DE hora_fin A hora_inicio
         descripcion: data.descripcion,
         stream_url: data.stream_url,
         imagen_url: data.imagen_base64 
@@ -24,11 +24,13 @@ export async function POST(request: Request) {
     ]);
 
     if (error) {
+      console.error("Error al insertar en Supabase:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (e) {
+    console.error("Error interno en POST:", e);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

@@ -17,7 +17,7 @@ export default function AdminPanel() {
   const [calData, setCalData] = useState({ 
     titulo: '', 
     fecha: '', 
-    hora_fin: '', 
+    hora_inicio: '', // ✅ Sincronizado con el nombre de la DB
     descripcion: '', 
     stream_url: '' 
   });
@@ -108,11 +108,19 @@ export default function AdminPanel() {
       const res = await fetch('/api/admin/calendario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...calData, imagen_base64: croppedImageUrl }),
+        // ✅ AHORA ENVIAMOS HORA_INICIO TAL CUAL (porque la DB ya se llama así)
+        body: JSON.stringify({ 
+          titulo: calData.titulo,
+          fecha: calData.fecha,
+          hora_inicio: calData.hora_inicio, 
+          descripcion: calData.descripcion,
+          stream_url: calData.stream_url,
+          imagen_base64: croppedImageUrl 
+        }),
       });
       if (res.ok) {
         setCalStatus('success');
-        setCalData({ titulo: '', fecha: '', hora_fin: '', descripcion: '', stream_url: '' });
+        setCalData({ titulo: '', fecha: '', hora_inicio: '', descripcion: '', stream_url: '' });
         setCroppedImageUrl(null);
         fetchEventos();
         setTimeout(() => setCalStatus('idle'), 3000);
@@ -197,7 +205,6 @@ export default function AdminPanel() {
         </header>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          {/* SECCIÓN CALENDARIO */}
           <section className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden flex flex-col gap-6 backdrop-blur-md">
             <h2 className="text-2xl font-bold text-[#F5C242] uppercase tracking-tighter leading-none">Añadir al Calendario</h2>
             <div className="flex flex-col gap-3">
@@ -223,8 +230,8 @@ export default function AdminPanel() {
                   <input required type="date" value={calData.fecha} onChange={e => setCalData({...calData, fecha: e.target.value})} className="bg-black/40 border border-white/5 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-gray-300 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70"/>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-bold text-[#F5C242] uppercase tracking-widest ml-1">Hora de Cierre/Fin</label>
-                  <input required type="time" value={calData.hora_fin} onChange={e => setCalData({...calData, hora_fin: e.target.value})} className="bg-black/40 border border-[#F5C242]/30 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-gray-300 [&::-webkit-calendar-picker-indicator]:invert"/>
+                  <label className="text-[10px] font-bold text-[#F5C242] uppercase tracking-widest ml-1">Hora de Inicio</label>
+                  <input required type="time" value={calData.hora_inicio} onChange={e => setCalData({...calData, hora_inicio: e.target.value})} className="bg-black/40 border border-[#F5C242]/30 p-4 rounded-xl text-sm outline-none focus:border-[#F5C242] text-gray-300 [&::-webkit-calendar-picker-indicator]:invert"/>
                 </div>
               </div>
 
@@ -237,7 +244,6 @@ export default function AdminPanel() {
             </form>
           </section>
 
-          {/* SECCIÓN VOTACIONES */}
           <div className="flex flex-col gap-10">
             <section className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md flex flex-col gap-6">
               <h2 className="text-2xl font-bold text-[#7A56B1] uppercase tracking-tighter">Nueva Encuesta</h2>
@@ -269,7 +275,7 @@ export default function AdminPanel() {
                   <div key={evento.id} className="flex justify-between items-center bg-black/40 border border-white/5 p-3 rounded-2xl">
                     <div className="flex flex-col min-w-0">
                       <h3 className="font-bold text-[#F5C242] text-xs uppercase truncate">{evento.titulo}</h3>
-                      <p className="text-[9px] text-gray-500 uppercase">{new Date(evento.fecha).toLocaleDateString()} - Fin: {evento.hora_fin || '??:??'}</p>
+                      <p className="text-[9px] text-gray-500 uppercase">{new Date(evento.fecha).toLocaleDateString()} - Inicio: {evento.hora_inicio || '??:??'}</p>
                     </div>
                     <button onClick={() => borrarEvento(evento.id)} className="bg-red-500/10 text-red-500 px-4 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-red-500 hover:text-white transition-all">Borrar</button>
                   </div>
