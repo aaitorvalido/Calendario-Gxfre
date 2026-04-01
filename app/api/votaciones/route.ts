@@ -89,4 +89,4 @@ export async function POST(request: Request) {
     console.error("Error en POST votaciones:", error);
     return NextResponse.json({ error: 'Error al procesar el voto' }, { status: 500 });
   }
-}
+} 
