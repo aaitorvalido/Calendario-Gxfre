@@ -55,7 +55,7 @@ export default function LoginPage() {
       >
         <header className="mb-8 text-center">
           <h2 className="text-4xl font-black italic text-[#F5C242] uppercase tracking-tighter">Entrar</h2>
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-2">Accede a tu cuenta</p>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-2">Accede a tu cuentaN</p>
         </header>
         
         {/* BOTÓN DE TWITCH LOGIN */}

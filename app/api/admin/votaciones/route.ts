@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // <--- CAMBIADO AQUÍ
 );
 
 export async function POST(request: Request) {
@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { titulo, descripcion, opciones, fecha_cierre } = body;
 
-    // 1. Actualizar Título, Descripción y Fecha de Cierre
     const { error: errInfo } = await supabase
       .from('votaciones_info')
       .update({ 
@@ -28,11 +27,10 @@ export async function POST(request: Request) {
 
     if (errInfo) throw errInfo;
 
-    // 2. RESET TOTAL de votos y opciones
+    // Reset de votos y opciones usando la llave maestra
     await supabase.from('registro_votos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('votaciones').delete().neq('label', 'SISTEMA_RESERVA');
 
-    // 3. Insertar las nuevas opciones
     if (opciones && Array.isArray(opciones)) {
       const nuevasOpciones = opciones
         .filter((opt: string) => opt && opt.trim() !== "")
@@ -52,7 +50,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Error en Admin API:", error);
     return NextResponse.json({ error: error.message || "Error al publicar" }, { status: 500 });
   }
 }
