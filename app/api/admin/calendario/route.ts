@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
-    // ✅ Sincronizado: Usamos 'hora_inicio' para insertar en la base de datos
+    //  Sincronizado: Usamos 'hora_inicio' para insertar en la base de datos
     const { error } = await supabase.from('calendario').insert([
       { 
         titulo: data.titulo,

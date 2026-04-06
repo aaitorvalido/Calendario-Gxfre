@@ -2,7 +2,6 @@ import { AuthOptions } from "next-auth";
 import TwitchProvider from "next-auth/providers/twitch"; 
 import { createClient } from '@supabase/supabase-js';
 
-// Conexión a Supabase con la Service Role Key para poder saltar RLS al registrar
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SECRET_KEY!; 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -24,7 +23,7 @@ export const authOptions: AuthOptions = {
     }),
   ],
   callbacks: {
-    // ✅ ESTE CALLBACK SE ENCARGA DE GUARDAR AL USUARIO EN LA DB SI NO EXISTE
+    //  ESTE CALLBACK SE ENCARGA DE GUARDAR AL USUARIO EN LA DB SI NO EXISTE
     async signIn({ user, account }) {
       if (account?.provider === "twitch") {
         try {

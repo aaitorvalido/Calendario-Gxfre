@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
-// 🚀 ESTÉTICA TECH/GAMING: Space Grotesk
+//  ESTÉTICA TECH/GAMING: Space Grotesk
 import { Space_Grotesk } from 'next/font/google';
 const mainFont = Space_Grotesk({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
 
@@ -50,7 +50,7 @@ export default function VotacionesPage() {
     }
   }, [authStatus]);
 
-  // ✅ LÓGICA DE LA CUENTA ATRÁS (CON FIX DEFINITIVO PARA EL DESFASE DE 1 HORA)
+  //  LÓGICA DE LA CUENTA ATRÁS (CON FIX DEFINITIVO PARA EL DESFASE DE 1 HORA)
   useEffect(() => {
     if (!info.fecha_cierre) return;
 

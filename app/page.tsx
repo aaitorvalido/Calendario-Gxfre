@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession, signOut } from 'next-auth/react';
 
-// 🖋️ FUENTE INTER
+//  FUENTE INTER
 import { Inter } from 'next/font/google';
 const logoFont = Inter({ subsets: ['latin'], weight: ['400', '500'] });
 
@@ -32,7 +32,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // ✅ ACTUALIZAR HORA CADA MINUTO
+  //  ACTUALIZAR HORA CADA MINUTO
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
@@ -43,7 +43,7 @@ export default function Home() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, [currentTime]);
 
-  // --- ⌨️ ACCESO SECRETO (Ctrl + Shift + A) ---
+ 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
@@ -69,7 +69,7 @@ export default function Home() {
       });
   }, []);
 
-  // ✅ LÓGICA DE DIRECTO INDEPENDIENTE
+  //  LÓGICA DE DIRECTO INDEPENDIENTE
   const checkIsLive = (eventDate: string, horaInicio: string) => {
     if (!eventDate || !horaInicio) return false;
     const isToday = eventDate.split('T')[0] === todayStr;
@@ -100,7 +100,7 @@ export default function Home() {
     };
   }, [viewDate]);
 
-  // ✅ FILTRADO Y ORDENACIÓN
+  //  FILTRADO Y ORDENACIÓN
   const displayedEvents = useMemo(() => {
     const monthStr = String(viewDate.getMonth() + 1).padStart(2, '0');
     const yearMonth = `${year}-${monthStr}`;
@@ -241,7 +241,7 @@ export default function Home() {
           </aside>
 
           <section className="lg:col-span-9 flex flex-col gap-6">
-            {/* ✅ GRID AJUSTADO PARA TARJETAS PANORÁMICAS 16:9 */}
+            {/*  GRID AJUSTADO PARA TARJETAS PANORÁMICAS 16:9 */}
             <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-8" variants={containerVariants} initial="hidden" animate="visible" key={`${displayedEvents.length}-${selectedDay}`}>
               <AnimatePresence mode='popLayout'>
                 {displayedEvents.map(event => {

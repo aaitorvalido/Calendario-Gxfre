@@ -6,7 +6,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react'; 
 
-// 🚀 NUEVA ESTÉTICA: Space Grotesk (Tech, Gaming, Cibernética)
+//  NUEVA ESTÉTICA: Space Grotesk 
 import { Space_Grotesk } from 'next/font/google';
 const mainFont = Space_Grotesk({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
 

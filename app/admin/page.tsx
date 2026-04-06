@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Cropper, { ReactCropperElement } from 'react-cropper';
 import Link from 'next/link';
 
-// 🚀 TIPOGRAFÍA SPACE GROTESK
+//  TIPOGRAFÍA SPACE GROTESK
 import { Space_Grotesk } from 'next/font/google';
 const mainFont = Space_Grotesk({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] });
 
@@ -17,7 +17,7 @@ export default function AdminPanel() {
   const [calData, setCalData] = useState({ 
     titulo: '', 
     fecha: '', 
-    hora_inicio: '', // ✅ Sincronizado con el nombre de la DB
+    hora_inicio: '', //  Sincronizado con el nombre de la DB
     descripcion: '', 
     stream_url: '' 
   });
@@ -108,7 +108,7 @@ export default function AdminPanel() {
       const res = await fetch('/api/admin/calendario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // ✅ AHORA ENVIAMOS HORA_INICIO TAL CUAL (porque la DB ya se llama así)
+        //  AHORA ENVIAMOS HORA_INICIO TAL CUAL (porque la DB ya se llama así)
         body: JSON.stringify({ 
           titulo: calData.titulo,
           fecha: calData.fecha,

@@ -13,18 +13,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ✅ CONFIGURACIÓN DE METADATOS PARA GOOGLE Y REDES SOCIALES
+//  CONFIGURACIÓN DE METADATOS PARA GOOGLE Y REDES SOCIALES
 export const metadata: Metadata = {
   title: "GXFRE | Calendario Oficial de Streams",
   description: "Sigue los próximos directos, votaciones y eventos especiales de GXFRE. ¡La cartelera oficial en un solo lugar!",
   keywords: ["GXFRE", "Calendario", "Twitch", "Streamer", "Eventos", "Votaciones"],
   
-  // 🔍 VERIFICACIÓN DE GOOGLE SEARCH CONSOLE
+  //  VERIFICACIÓN DE GOOGLE SEARCH CONSOLE
   verification: {
     google: "BsraKmB15E0DrWuxDH1v82d36CavO0Ej6ndELOpIegI",
   },
 
-  // 📱 VISTA PREVIA EN REDES (WhatsApp, Twitter, Google)
+  //  VISTA PREVIA EN REDES (WhatsApp, Twitter, Google)
   openGraph: {
     title: "GXFRE | Calendario Oficial",
     description: "Consulta el horario de los próximos directos aquí.",
